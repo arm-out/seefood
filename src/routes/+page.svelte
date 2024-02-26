@@ -4,6 +4,7 @@
 	import Modal from './Modal.svelte';
 	import { nanoid } from 'nanoid';
 	import { supabase } from '$lib/client';
+	import Item from './Item.svelte';
 
 	let showModal = false;
 	let input: HTMLInputElement;
@@ -12,6 +13,21 @@
 	let previewContainer: HTMLDivElement;
 	let imageContainer: HTMLDivElement;
 	let reducedBlob: Blob;
+
+	let content: ContentType;
+
+	type ContentType = {
+		type: string;
+		items?: Array<{
+			name: string;
+			ingredients: string;
+			calories: number;
+			carbohydrates: number;
+			protein: number;
+			fat: number;
+		}>;
+		tips?: string;
+	};
 
 	async function getCalories() {
 		if ($apiKey === '') {
@@ -28,10 +44,10 @@
 		uploadBtn.style.visibility = 'hidden';
 
 		// upload image to supabase
-		// const fileName = nanoid(10) + reducedBlob.type.replace('image/', '.');
-		// supabase.storage.from('seefood').upload(fileName, reducedBlob);
+		const fileName = nanoid(10) + reducedBlob.type.replace('image/', '.');
+		await supabase.storage.from('seefood').upload(fileName, reducedBlob);
 
-		const res = await fetch('/api?key=' + $apiKey + '&file=' + 'H65vCO6onV.jpeg');
+		const res = await fetch('/api?key=' + $apiKey + '&file=' + fileName);
 		const data = await res.json();
 
 		if (!res.ok) {
@@ -45,6 +61,30 @@
 		}
 
 		console.log(data);
+
+		if (data.res.finish_reason !== 'stop') {
+			alert('Open AI error');
+			return;
+		}
+
+		let raw = data.res.message.content;
+		let sanitized = raw.replace(/`{3}json|`{3}/g, '');
+		let parsed;
+
+		try {
+			parsed = JSON.parse(sanitized);
+			if (parsed && (parsed as ContentType).type !== 'success') {
+				alert('No food found in image');
+				content = { type: '' };
+				return;
+			}
+		} catch (e) {
+			alert('Open AI response error');
+			return;
+		}
+
+		content = parsed;
+		console.log(content);
 		imageContainer.classList.remove('scanning');
 	}
 
@@ -71,6 +111,7 @@
 								reducedBlob = blob;
 								imageContainer.classList.remove('scanning');
 								uploadBtn.style.visibility = 'visible';
+								content = { type: '' };
 								previewContainer.style.display = 'block';
 								uploadBtn.scrollIntoView({ behavior: 'smooth' });
 							});
@@ -85,10 +126,6 @@
 		} else {
 			alert('Please submit a picture');
 		}
-	}
-
-	async function onUpload() {
-		console.log('upload');
 	}
 </script>
 
@@ -155,6 +192,20 @@
 				>Get Nutrition</button
 			>
 		</div>
+
+		{#if content && content.items}
+			<div class="flex flex-col gap-6 w-[80ch] max-w-full -mt-12 pb-6">
+				{#each content.items as item}
+					<Item {...item} />
+				{/each}
+
+				<p>{content.tips}</p>
+				<p class="pt-2 text-gray-600">
+					Please note that these are approximations based on standard ingredients and recipes and
+					actual values may vary depending on quantity and specific ingredients used
+				</p>
+			</div>
+		{/if}
 	</main>
 
 	<footer class="flex items-center justify-center mt-auto">
