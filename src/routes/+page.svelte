@@ -6,29 +6,31 @@
 	let showModal = false;
 	let input: HTMLInputElement;
 	let preview: HTMLImageElement;
+	let uploadBtn: HTMLButtonElement;
 	let previewContainer: HTMLDivElement;
+	let imageContainer: HTMLDivElement;
 	let reducedBlob: Blob;
 
 	async function getCalories() {
-		if ($apiKey === '') {
-			alert('Please enter an API Key');
-			return;
-		}
+		imageContainer.classList.add('scanning');
+		uploadBtn.style.visibility = 'hidden';
 
-		const res = await fetch('/api/see?api=' + $apiKey);
-		const data = await res.json();
-
-		if (!res.ok) {
-			console.log('ERROR');
-			if (data.error.status === 401) {
-				alert('API Key is invalid');
-			} else {
-				alert('Something went wrong');
-			}
-			return;
-		}
-
-		console.log(data);
+		// if ($apiKey === '') {
+		// 	alert('Please enter an API Key');
+		// 	return;
+		// }
+		// const res = await fetch('/api/see?api=' + $apiKey);
+		// const data = await res.json();
+		// if (!res.ok) {
+		// 	console.log('ERROR');
+		// 	if (data.error.status === 401) {
+		// 		alert('API Key is invalid');
+		// 	} else {
+		// 		alert('Something went wrong');
+		// 	}
+		// 	return;
+		// }
+		// console.log(data);
 	}
 
 	function fileChange() {
@@ -52,7 +54,10 @@
 							.then((blob) => {
 								// console.log('Reduced Blob:', blob);
 								reducedBlob = blob;
+								imageContainer.classList.remove('scanning');
+								uploadBtn.style.visibility = 'visible';
 								previewContainer.style.display = 'block';
+								uploadBtn.scrollIntoView({ behavior: 'smooth' });
 							});
 					})
 					.catch((err) => {
@@ -121,11 +126,19 @@
 				</label>
 				a photo of your meal to start!
 			</p>
+		</div>
 
-			<div bind:this={previewContainer} class="hidden">
-				<img bind:this={preview} src="" alt="preview" />
-				<button on:click={getCalories}>upload</button>
+		<div bind:this={previewContainer} class="hidden">
+			<div bind:this={imageContainer} class="relative overflow-hidden max-w-[400px] scanning">
+				<img bind:this={preview} class="w-full h-auto" src="" alt="preview" />
 			</div>
+
+			<button
+				bind:this={uploadBtn}
+				on:click={getCalories}
+				class="text-white bg-black px-4 py-2 rounded-md cursor-pointer text-nowrap mt-4 mb-12"
+				>Get Nutrition</button
+			>
 		</div>
 	</main>
 
@@ -151,3 +164,29 @@
 <Modal bind:showModal>
 	<h2 slot="header" class="font-bold pb-2">API Key</h2>
 </Modal>
+
+<style>
+	.scanning::before {
+		content: '';
+		position: absolute;
+		top: -100%; /* Start from above the container */
+		left: 0;
+		width: 100%;
+		height: 80%; /* Thickness of the scanning line */
+		background:
+			linear-gradient(90deg, transparent, #fff) 100% 0 /25% 100% no-repeat,
+			#fa8f38;
+		filter: contrast(2);
+		mix-blend-mode: difference; /* This will create a contrasting effect */
+		animation: scan 2s infinite; /* Adjust timing as needed */
+	}
+
+	@keyframes scan {
+		from {
+			top: -100%;
+		}
+		to {
+			top: 100%;
+		}
+	}
+</style>
