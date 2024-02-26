@@ -23,8 +23,7 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div on:click|stopPropagation>
 		<slot name="header" />
-		<hr />
-		<p>
+		<p class="pb-5">
 			Enter your Open AI API key which can be found <a
 				target="_blank"
 				rel="noopener noreferrer"
@@ -32,17 +31,27 @@
 				href="https://platform.openai.com/account/api-keys">here</a
 			>
 		</p>
-		<input bind:value={key} type="text" placeholder="xx-xxxxxxxxxxxxxxxxx" />
+
+		<input
+			bind:value={key}
+			class="mb-5 w-full border-b"
+			type="text"
+			placeholder="xx-xxxxxxxxxxxxxxxxx"
+		/>
 
 		<!-- svelte-ignore a11y-autofocus -->
-		<button autofocus on:click={submit}>save</button>
+		<button
+			autofocus
+			on:click={submit}
+			class="text-white bg-black px-2 py-1 rounded-md cursor-pointer text-nowrap">save</button
+		>
 	</div>
 </dialog>
 
 <style>
 	dialog {
 		max-width: 32em;
-		min-width: 20rem;
+		width: 70vw;
 		border-radius: 0.2em;
 		border: none;
 		padding: 0;
