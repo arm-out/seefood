@@ -2,6 +2,8 @@
 	import { apiKey } from '$lib/stores';
 	import ImageBlobReduce from 'image-blob-reduce';
 	import Modal from './Modal.svelte';
+	import { nanoid } from 'nanoid';
+	import { supabase } from '$lib/client';
 
 	let showModal = false;
 	let input: HTMLInputElement;
@@ -12,25 +14,38 @@
 	let reducedBlob: Blob;
 
 	async function getCalories() {
+		if ($apiKey === '') {
+			alert('Please enter an API Key');
+			return;
+		}
+
+		if (!reducedBlob) {
+			alert('Please submit a picture');
+			return;
+		}
+
 		imageContainer.classList.add('scanning');
 		uploadBtn.style.visibility = 'hidden';
 
-		// if ($apiKey === '') {
-		// 	alert('Please enter an API Key');
-		// 	return;
-		// }
-		// const res = await fetch('/api/see?api=' + $apiKey);
-		// const data = await res.json();
-		// if (!res.ok) {
-		// 	console.log('ERROR');
-		// 	if (data.error.status === 401) {
-		// 		alert('API Key is invalid');
-		// 	} else {
-		// 		alert('Something went wrong');
-		// 	}
-		// 	return;
-		// }
-		// console.log(data);
+		// upload image to supabase
+		// const fileName = nanoid(10) + reducedBlob.type.replace('image/', '.');
+		// supabase.storage.from('seefood').upload(fileName, reducedBlob);
+
+		const res = await fetch('/api?key=' + $apiKey + '&file=' + 'H65vCO6onV.jpeg');
+		const data = await res.json();
+
+		if (!res.ok) {
+			console.log('ERROR');
+			if (data.error.status === 401) {
+				alert('API Key is invalid');
+			} else {
+				alert('Something went wrong');
+			}
+			return;
+		}
+
+		console.log(data);
+		imageContainer.classList.remove('scanning');
 	}
 
 	function fileChange() {

@@ -35,7 +35,9 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@supabase/supabase-js": "^2.39.7",
 		"image-blob-reduce": "^4.1.0",
+		"nanoid": "^5.0.6",
 		"openai": "^4.27.0"
 	}
 }
